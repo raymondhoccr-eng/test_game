@@ -19,6 +19,7 @@
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('score');
     let score = 0;
     let ball = { x: 200, y: 550, radius: 10, vx: 0, vy: 0, launched: false };
     let bumpers = [
@@ -27,6 +28,8 @@
       { x: 200, y: 350, r: 30 }
     ];
     let flipper = { x: 200, y: 880, w: 80, h: 10, angle: 0, speed: 8 };
+    flipper.halfW = flipper.w / 2;
+    flipper.halfH = flipper.h / 2;
     let gravity = 0.05;
     let moveLeft = false, moveRight = false;
     let gameOver = false;
@@ -54,7 +57,7 @@
       ctx.translate(flipper.x, flipper.y);
       ctx.rotate(flipper.angle);
       ctx.fillStyle = '#f0f';
-      ctx.fillRect(-flipper.w/2, -flipper.h/2, flipper.w, flipper.h);
+      ctx.fillRect(-flipper.halfW, -flipper.halfH, flipper.w, flipper.h);
       ctx.restore();
     }
 
@@ -66,8 +69,8 @@
     }
 
     function update() {
-      if (moveLeft) flipper.x = Math.max(flipper.w/2, flipper.x - flipper.speed);
-      if (moveRight) flipper.x = Math.min(canvas.width - flipper.w/2, flipper.x + flipper.speed);
+      if (moveLeft) flipper.x = Math.max(flipper.halfW, flipper.x - flipper.speed);
+      if (moveRight) flipper.x = Math.min(canvas.width - flipper.halfW, flipper.x + flipper.speed);
       if (!ball.launched) return;
       ball.vy += gravity;
       ball.x += ball.vx;
@@ -83,25 +86,26 @@
       }
       // 碰撞 flipper
       if (
-        ball.y + ball.radius > flipper.y - flipper.h/2 &&
-        ball.x > flipper.x - flipper.w/2 &&
-        ball.x < flipper.x + flipper.w/2 &&
+        ball.y + ball.radius > flipper.y - flipper.halfH &&
+        ball.x > flipper.x - flipper.halfW &&
+        ball.x < flipper.x + flipper.halfW &&
         ball.vy > 0
       ) {
         ball.vy = -Math.abs(ball.vy) * 0.9;
-        ball.y = flipper.y - flipper.h/2 - ball.radius;
+        ball.y = flipper.y - flipper.halfH - ball.radius;
       }
       // 碰撞 bumpers
       bumpers.forEach(b => {
         let dx = ball.x - b.x;
         let dy = ball.y - b.y;
-        let dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist < ball.radius + b.r) {
+        let distSq = dx*dx + dy*dy;
+        let radiiSumSq = (ball.radius + b.r) * (ball.radius + b.r);
+        if (distSq < radiiSumSq) {
           let angle = Math.atan2(dy, dx);
           ball.vx += Math.cos(angle) * 2;
           ball.vy += Math.sin(angle) * 2;
           score += 10;
-          document.getElementById('score').innerText = '分數：' + score;
+          scoreElement.innerText = '分數：' + score;
         }
       });
       // 遊戲結束
@@ -117,7 +121,7 @@
 
     function resetGame() {
       score = 0;
-      document.getElementById('score').innerText = '分數：0';
+      scoreElement.innerText = '分數：0';
       ball = { x: 200, y: 550, radius: 10, vx: 0, vy: 0, launched: false };
       gameOver = false;
     }
@@ -141,9 +145,9 @@
         flipper.angle = -0.5;
         setTimeout(() => { flipper.angle = 0; }, 120);
         if (
-          ball.y + ball.radius > flipper.y - flipper.h/2 &&
-          ball.x > flipper.x - flipper.w/2 &&
-          ball.x < flipper.x + flipper.w/2 &&
+          ball.y + ball.radius > flipper.y - flipper.halfH &&
+          ball.x > flipper.x - flipper.halfW &&
+          ball.x < flipper.x + flipper.halfW &&
           ball.vy > 0
         ) {
           ball.vy = -10;
@@ -157,11 +161,6 @@
       if (e.code === 'ArrowRight' || e.code === 'KeyD') moveRight = false;
     });
     gameLoop();
-    document.getElementById('play-music-btn').addEventListener('click', function() {
-      var audio = document.getElementById('bg-music');
-      audio.play();
-      this.style.display = 'none';
-    });
   </script>
 </body>
 </html>
